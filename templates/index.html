@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rasa Chatbot with Object Detection</title>
+    <style>
+        #container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 60%;
+        }
+        #video-container {
+            width: 40%;
+        }
+        #chat {
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        #user, #bot {
+            margin-bottom: 10px;
+        }
+        #user {
+            color: green;
+        }
+        #bot {
+            text-align: right;
+            color: blue;
+        }
+        #input-container {
+            display: flex;
+            margin-top: 10px;
+        }
+        #user-input {
+            flex: 1;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="chat-container">
+            <div id="chat">
+                <!-- Chat messages will be displayed here -->
+            </div>
+            <div id="input-container">
+                <input type="text" id="user-input" placeholder="Type your message..." />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+        <div id="video-container">
+            <img src="{{ url_for('video_feed') }}" width="100%" height="auto" />
+        </div>
+    </div>
+
+    <script>
+        // Function to add a message to the chat
+        function addMessage(containerId, message, isBot) {
+            var container = document.getElementById(containerId);
+            var messageDiv = document.createElement("div");
+            messageDiv.innerText = message;
+            if (isBot) {
+                messageDiv.setAttribute("id", "bot");
+            } else {
+                messageDiv.setAttribute("id", "user");
+            }
+            container.appendChild(messageDiv);
+            // Scroll to the bottom of the chat container
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Function to send user input to Rasa and display the response
+        function sendMessage() {
+            var userInput = document.getElementById("user-input").value;
+            if (userInput.trim() !== "") {
+                // Add user message to the chat
+                addMessage("chat", "User: " + userInput, false);
+
+                // Send user message to Rasa API
+                fetch("http://localhost:5005/webhooks/rest/webhook", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ message: userInput }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Add bot response to the chat
+                    var botResponse = data[0].text;
+                    addMessage("chat", "Bot: " + botResponse, true);
+                })
+                .catch(error => console.error("Error:", error));
+
+                // Clear the input field
+                document.getElementById("user-input").value = "";
+            }
+        }
+
+        // Dummy chatbot responses (replace with actual responses from Rasa)
+        var chatbotResponses = ["Hello! How can I help you?", "Sure, I can assist with that.", "Thank you!"];
+
+        // Add dummy chatbot responses to the chat
+        chatbotResponses.forEach(function(response) {
+            addMessage("chat", response, true);
+        });
+    </script>
+    <!-- ... (previous HTML code) ... -->
+
+<script>
+    // Function to add a message to the chat
+    function addMessage(containerId, message, isBot) {
+        var container = document.getElementById(containerId);
+        var messageDiv = document.createElement("div");
+        messageDiv.innerText = message;
+        if (isBot) {
+            messageDiv.setAttribute("id", "bot");
+        } else {
+            messageDiv.setAttribute("id", "user");
+        }
+        container.appendChild(messageDiv);
+        // Scroll to the bottom of the chat container
+        container.scrollTop = container.scrollHeight;
+    }
+
+    // Function to send user input to Rasa and display the response
+    async function sendMessage() {
+        var userInput = document.getElementById("user-input").value;
+        if (userInput.trim() !== "") {
+            // Add user message to the chat
+            addMessage("chat", "User: " + userInput, false);
+
+            // Send user message to Rasa API
+            try {
+                const response = await fetch("http://localhost:5005/webhooks/rest/webhook", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ message: userInput }),
+                });
+
+                const data = await response.json();
+
+                // Add bot response to the chat
+                var botResponse = data[0].text;
+                addMessage("chat", "Bot: " + botResponse, true);
+            } catch (error) {
+                console.error("Error:", error);
+            }
+
+            // Clear the input field
+            document.getElementById("user-input").value = "";
+        }
+    }
+
+    // Dummy chatbot responses (replace with actual responses from Rasa)
+    var chatbotResponses = ["Hello! How can I help you?", "Sure, I can assist with that.", "Thank you!"];
+
+    // Add dummy chatbot responses to the chat
+    chatbotResponses.forEach(function(response) {
+        addMessage("chat", response, true);
+    });
+</script>
+
+<!-- ... (remaining HTML code) ... -->
+
+</body>
+</html>
